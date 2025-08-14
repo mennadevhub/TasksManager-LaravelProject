@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Http\Request ;
-use Illuminate\Support\Facades\Route;
+use App\Http\Requests\TaskRequest;
 use App\Models\Task;
-
+use  Illuminate\Http\Request ;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/',function(){
 
@@ -23,7 +23,6 @@ Route::get('/tasks', function () {
 
         // 'tasks'=> Task::latest()->where('completed' , true)->get() //using here Query Builder "where" to fetch only completed tasks
 
-
   ]);
 
 })->name('tasks.index');
@@ -34,7 +33,17 @@ Route::get('/tasks', function () {
 Route::view('/tasks/create' , 'create')->name('tasks.create');
 
 
-Route::get('/tasks/{id}',function ($id)  { //note that id is a primary key
+
+Route::get('/tasks/{task}/edit',function (Task $task)  { //note that task is a primary key
+
+    return view('edit', [
+        'task' => $task
+    ]);
+
+})->name('tasks.edit');
+
+
+Route::get('/tasks/{task}',function (Task $task)  { //note that id is a primary key
 
     // $task=collect($tasks)->firstWhere('id', $id);
     // if (!$task) {;
@@ -42,35 +51,63 @@ Route::get('/tasks/{id}',function ($id)  { //note that id is a primary key
     // }
 
     return view('show', [
-        'task' =>Task::findOrFail($id)
+        'task' => $task
     ]);
 
 })->name('tasks.show');
 
-Route::post('/tasks', function (Request $request) {
+Route::post('/tasks', function (TaskRequest $request) {
 
  // dd($request->all()); // This will dump all the request data and stop the execution
 
 
  //Validate the incoming request data
 
-    $data = $request->validate([
-        'title' => 'required|max:255',
-        'description' => 'required',
-        'long_description' => 'required'
-    ]);
 
-    $task = new Task;
-    $task->title = $data['title'];
-    $task->description = $data['description'];
-    $task->long_description = $data['long_description'];
-    $task->save();
+    // $data = $request->validated(); // Validate the request data using TaskRequest
+
+    // $task = new Task;
+    // $task->title = $data['title'];
+    // $task->description = $data['description'];
+    // $task->long_description = $data['long_description'];
+    // $task->save();
+
+    $task = Task::create( $request->validated());
 
     return redirect()->route('tasks.show',  $task->id)->with('success', 'Task created successfully!');
-    
+
 })->name('tasks.store');
 
 
+Route::put('/tasks/{task}', function (Task $task ,TaskRequest $request) {
+
+ // dd($request->all()); // This will dump all the request data and stop the execution
+
+
+ //Validate the incoming request data
+
+
+    // $data = $request->validated(); // Validate the request data using TaskRequest
+
+    // $task->title = $data['title'];
+    // $task->description = $data['description'];
+    // $task->long_description = $data['long_description'];
+    // $task->save();
+
+     $task ->update( $request->validated());
+
+    return redirect()->route('tasks.show', ['task' => $task->id])->with('success', 'Task updated successfully!');
+
+})->name('tasks.update');
+
+
+
+Route::delete('/tasks/{task}' , function(Task $task){
+    $task->delete();
+
+    return redirect()->route('tasks.index')->with('success', 'Task deleted successfully!');
+
+})->name('tasks.destroy');
 
 
 
