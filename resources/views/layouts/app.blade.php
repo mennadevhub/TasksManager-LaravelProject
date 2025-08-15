@@ -15,7 +15,6 @@
         <div>
             {{ session('success') }}
         </div>
-
     @endif
 
     <div>
